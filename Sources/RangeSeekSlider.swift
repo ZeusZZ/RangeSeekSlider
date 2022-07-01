@@ -226,6 +226,7 @@ import UIKit
 
     private enum HandleTracking { case none, left, right }
     private var handleTracking: HandleTracking = .none
+    private var handleTrackingOffset: CGFloat = 0
 
     private let sliderLine: CALayer = CALayer()
     private let sliderLineBetweenHandles: CALayer = CALayer()
@@ -307,12 +308,16 @@ import UIKit
         let distanceFromLeftHandle: CGFloat = touchLocation.distance(to: leftHandle.frame.center)
         let distanceFromRightHandle: CGFloat = touchLocation.distance(to: rightHandle.frame.center)
 
+        let x = touch.location(in: self).x
         if distanceFromLeftHandle < distanceFromRightHandle && !disableRange {
             handleTracking = .left
+            handleTrackingOffset = x - leftHandle.frame.center.x
         } else if selectedMaxValue == maxValue && leftHandle.frame.midX == rightHandle.frame.midX {
             handleTracking = .left
+            handleTrackingOffset = x - leftHandle.frame.center.x
         } else {
             handleTracking = .right
+            handleTrackingOffset = x - rightHandle.frame.center.x
         }
         let handle: CALayer = (handleTracking == .left) ? leftHandle : rightHandle
         animate(handle: handle, selected: true)
@@ -328,7 +333,7 @@ import UIKit
         let location: CGPoint = touch.location(in: self)
 
         // find out the percentage along the line we are in x coordinate terms (subtracting half the frames width to account for moving the middle of the handle, not the left hand side)
-        let percentage: CGFloat = (location.x - sliderLine.frame.minX) / (sliderLine.frame.maxX - sliderLine.frame.minX)
+        let percentage: CGFloat = (location.x - sliderLine.frame.minX - handleTrackingOffset) / (sliderLine.frame.maxX - sliderLine.frame.minX)
 
         // multiply that percentage by self.maxValue to get the new selected minimum value
         let selectedValue: CGFloat = percentage * (maxValue - minValue) + minValue
